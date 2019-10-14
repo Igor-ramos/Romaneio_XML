@@ -67,7 +67,7 @@ namespace CriandoSoapXML
                 string DT_Emissao = itemlote.SelectSingleNode("DT_Emissao").InnerText;
                 string OP_Tipo_Lote = itemlote.SelectSingleNode("OP_Tipo_Lote").InnerText;
                 string NR_Cnpj_Faccionista = itemlote.SelectSingleNode("NR_Cnpj_Faccionista").InnerText;
-                t = verifica_Lote(NR_Nota_Fiscal, DT_Emissao, OP_Tipo_Lote, NR_Cnpj_Faccionista); 
+                t = verifica_Lote(id_cliente, NR_Nota_Fiscal, DT_Emissao, OP_Tipo_Lote, NR_Cnpj_Faccionista); 
                 if (t == null)
                 {
                     vSqL = "INSERT INTO Romaneio_Lote ";
@@ -618,7 +618,7 @@ namespace CriandoSoapXML
             Lote erro_Lote_Lista = new Lote();
             Lote erro_Lote_Lista1 = new Lote();
             Lote erro_Lote_Lista2 = new Lote();
-            Lote erro_Lote_Lista3 = new Lote();            
+            Lote erro_Lote_Lista3 = new Lote();
             ContaCaractere contador = new ContaCaractere();
             int cont1 = 0;
 
@@ -665,7 +665,7 @@ namespace CriandoSoapXML
             return null;
 
         }
-        public xml verifica_Lote(string NR_Nota_Fiscal, string DT_Emissao, string OP_Tipo_Lote, string NR_Cnpj_Faccionista)
+        public xml verifica_Lote(int id, string NR_Nota_Fiscal, string DT_Emissao, string OP_Tipo_Lote, string NR_Cnpj_Faccionista)
         {
             MySqlConnection con = null;
             ServiceErrors erroLote = new ServiceErrors();
@@ -673,18 +673,18 @@ namespace CriandoSoapXML
 
             if (Convert.ToInt32(OP_Tipo_Lote) == 1)
             {
-                if(NR_Cnpj_Faccionista != "0")
+                if (NR_Cnpj_Faccionista != "0")
                 {
 
-                
-                Lote erro_Lote_Lista = new Lote();
+
+                    Lote erro_Lote_Lista = new Lote();
 
 
-                erro_Lote_Lista.erro_Lote = erroLote.ErrorMessageTipo;
+                    erro_Lote_Lista.erro_Lote = erroLote.ErrorMessageTipo;
 
-                erroList.Add(erro_Lote_Lista);
-                xml dadosXML = new xml(erroList);
-                return dadosXML;
+                    erroList.Add(erro_Lote_Lista);
+                    xml dadosXML = new xml(erroList);
+                    return dadosXML;
                 }
             }
 
@@ -718,6 +718,7 @@ namespace CriandoSoapXML
                             {
                                 Lote erro_lote_Lista = new Lote();
                                 erro_lote_Lista.erro_Lote = "Lote já cadastrado";
+                                erro_lote_Lista.id_lote = id;
                                 erroList.Add(erro_lote_Lista);
                                 xml dadosXML = new xml(erroList);
                                 return dadosXML;
@@ -939,7 +940,7 @@ namespace CriandoSoapXML
             Peca erro_Peca_Lista = new Peca();
             Peca erro_Peca_Lista1 = new Peca();
             Peca erro_Peca_Lista2 = new Peca();
-            Peca erro_Peca_Lista3 = new Peca();           
+            Peca erro_Peca_Lista3 = new Peca();
             ContaCaractere contador = new ContaCaractere();
             int cont1 = 0;
 
@@ -984,7 +985,7 @@ namespace CriandoSoapXML
                 xml dadosXML = new xml(erroList);
                 return dadosXML;
             }
-            
+
             return null;
 
         }
@@ -1020,7 +1021,7 @@ namespace CriandoSoapXML
                 erroList.Add(erro_Peca_Lista);
                 xml dadosXML = new xml(erroList);
                 return dadosXML;
-            }            
+            }
 
             xml x = Campos_Peca(NR_Peca, NR_Peso, NR_Comprimento, TP_Maquina);
 
