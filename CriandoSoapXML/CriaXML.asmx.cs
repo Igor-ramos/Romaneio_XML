@@ -72,7 +72,7 @@ namespace CriandoSoapXML
                 {
                     vSqL = "INSERT INTO Romaneio_Lote ";
                     vSqL += "(ID_Cliente, NR_Nota_Fiscal, DT_Emissao, OP_Tipo_Lote, NR_Cnpj_Faccionista, ID_Status, DT_Status, COD_Verificacao) ";
-                    vSqL += "VALUES(@ID_Cliente, @NR_Nota_Fiscal, @OP_Tipo_Lote, @NR_Cnpj_Faccionista, '1', NOW(), @COD_Verificacao)";
+                    vSqL += "VALUES(@ID_Cliente, @NR_Nota_Fiscal, @DT_Emissao, @OP_Tipo_Lote, @NR_Cnpj_Faccionista, '1', NOW(), @COD_Verificacao)";
                     Lote lote1 = new Lote();
 
                     cmd = new MySqlCommand(vSqL, conection);
@@ -99,14 +99,14 @@ namespace CriandoSoapXML
                         List<Romaneio> romaneios = new List<Romaneio>();
                         foreach (XmlNode itemromaneio in romaneio)
                         {
-                            string NR_Romaneio = itemlote.SelectSingleNode("NR_Romaneio").InnerText;
-                            string DC_Artigo = itemlote.SelectSingleNode("DC_Artigo").InnerText;
-                            string DC_Cor = itemlote.SelectSingleNode("DC_Cor").InnerText;
-                            string OP_Tipo = itemlote.SelectSingleNode("OP_Tipo").InnerText;
-                            string NR_Cod_Produto = itemlote.SelectSingleNode("NR_Cod_Produto").InnerText;
-                            string NR_Largura = itemlote.SelectSingleNode("NR_Largura").InnerText;
-                            string NR_Gramatura = itemlote.SelectSingleNode("NR_Gramatura").InnerText;
-                            string DC_Obs = itemlote.SelectSingleNode("DC_Obs").InnerText;
+                            string NR_Romaneio = itemromaneio.SelectSingleNode("NR_Romaneio").InnerText;
+                            string DC_Artigo = itemromaneio.SelectSingleNode("DC_Artigo").InnerText;
+                            string DC_Cor = itemromaneio.SelectSingleNode("DC_Cor").InnerText;
+                            string OP_Tipo = itemromaneio.SelectSingleNode("OP_Tipo").InnerText;
+                            string NR_Cod_Produto = itemromaneio.SelectSingleNode("NR_Cod_Produto").InnerText;
+                            string NR_Largura = itemromaneio.SelectSingleNode("NR_Largura").InnerText;
+                            string NR_Gramatura = itemromaneio.SelectSingleNode("NR_Gramatura").InnerText;
+                            string DC_Obs = itemromaneio.SelectSingleNode("DC_Obs").InnerText;
                             t = verifica_Romaneio(NR_Romaneio, DC_Artigo, DC_Cor, OP_Tipo, NR_Cod_Produto, NR_Largura, NR_Gramatura, DC_Obs); //se repetir esses, nao adiciona o Romaneio novo.
                             if (t == null)
                             {
@@ -142,10 +142,10 @@ namespace CriandoSoapXML
                                     List<Peca> pecas = new List<Peca>();
                                     foreach (XmlNode itempeca in peca)
                                     {
-                                        string NR_Peca = itemlote.SelectSingleNode("NR_Peca").InnerText;
-                                        string NR_Peso = itemlote.SelectSingleNode("NR_Peso").InnerText;
-                                        string NR_Comprimento = itemlote.SelectSingleNode("NR_Comprimento").InnerText;
-                                        string TP_Maquina = itemlote.SelectSingleNode("TP_Maquina").InnerText;
+                                        string NR_Peca = itempeca.SelectSingleNode("NR_Peca").InnerText;
+                                        string NR_Peso = itempeca.SelectSingleNode("NR_Peso").InnerText;
+                                        string NR_Comprimento = itempeca.SelectSingleNode("NR_Comprimento").InnerText;
+                                        string TP_Maquina = itempeca.SelectSingleNode("TP_Maquina").InnerText;
                                         t = verifica_Peca(ultimoid, NR_Peca, NR_Peso, NR_Comprimento, TP_Maquina); //se repetir esses, nao adiciona peça nova.
 
                                         if (t == null)
