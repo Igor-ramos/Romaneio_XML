@@ -237,8 +237,53 @@ namespace CriandoSoapXML
             return sucessoxml;
         }
 
-        [WebMethod(Description = "Busca os lotes")]
+        [WebMethod(Description = "Artigo e Cor")]
         [SoapDocumentMethod]
+        public xml WsArtigoECor(string CNPJ)
+        {
+            List<Cor> cores = new List<Cor>();
+
+            string vSQL = "SELECT * FROM v_SaldoArtigoCor A";
+            vSQL += " INNER JOIN Cadastro_Cliente C ON A.ID_Cliente = C.ID_Cliente ";
+            vSQL += " WHERE C.Cnpj = '" + CNPJ + "'";
+
+            using (var connection = new MySqlConnection("Server=seiren_dev.mysql.dbaas.com.br;Port=3306;Database=seiren_dev;Uid=seiren_dev;Pwd=S3iR3n@1973dev;"))
+            {
+                connection.Open(); using (var cmd = new MySqlCommand())
+                {
+                    cmd.Connection = connection;
+                    cmd.CommandType = CommandType.Text;
+                    cmd.CommandText = vSQL;
+                    using (var dr = cmd.ExecuteReader(CommandBehavior.CloseConnection))
+                    {
+                        if (dr.HasRows)
+                        {
+                            while (dr.Read())
+                            {
+                                Cor cor = new Cor();
+                                cor.artigo = dr["Artigo"].ToString();
+                                cor.divisao = dr["Divisao"].ToString();
+                                cor.corl = dr["Cor"].ToString();
+                                cor.pecas = Convert.ToDecimal(dr["Pecas"]);
+                                cor.peso = Convert.ToDecimal(dr["Peso"]);
+                                cores.Add(cor);
+                            }
+                            dr.Close();
+                            dr.Dispose();
+
+                            xml dadosXML = new xml(cores);
+                            //Retornar o xml
+                            return dadosXML;
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        //[WebMethod(Description = "Busca os lotes")]
+        //[SoapDocumentMethod]
         public xml WsBuscaLotes(string CNPJ)
         {
             List<Lote> Lotes = new List<Lote>();
@@ -349,8 +394,8 @@ namespace CriandoSoapXML
             }
         }
 
-        [WebMethod(Description = "1 - Cartao | 2 - Resumo | 3 - Artigo | 4 - Artigo e Cor | 5 - Nota Fiscal")]
-        [SoapDocumentMethod]
+        ////[WebMethod(Description = "1 - Cartao | 2 - Resumo | 3 - Artigo | 4 - Artigo e Cor | 5 - Nota Fiscal")]
+        ////[SoapDocumentMethod]
         public xml WsVerSaldo(string CNPJ, int Opcao)
         {
             string vSQL = "";
