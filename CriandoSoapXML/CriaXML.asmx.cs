@@ -45,7 +45,7 @@ namespace CriandoSoapXML
             XmlTextReader xmlReader = new XmlTextReader(caminhoArquivo);
             doc.Load(caminhoArquivo);
 
-            XmlNodeList lote = doc.SelectNodes("Lotes/Lote");
+            XmlNodeList lote = doc.SelectNodes("lotes/Lote");
             XmlNodeList romaneio, peca;
             string vSqL = "SELECT ID_Cliente FROM Cadastro_Cliente WHERE Cnpj = '" + CNPJ + "'";
             int id_cliente;
@@ -631,7 +631,7 @@ namespace CriandoSoapXML
                 Lote erro_Lote_Lista = new Lote();
 
 
-                erro_Lote_Lista.erro_Lote = erroLote.ErrorMessageLimiteGramatura;
+                erro_Lote_Lista.erro_Lote = erroLote.ErrorMessageTipo;
 
                 erroList.Add(erro_Lote_Lista);
                 xml dadosXML = new xml(erroList);
@@ -644,7 +644,6 @@ namespace CriandoSoapXML
             if (t == null)
             {
 
-                string conexao = ConfigurationManager.ConnectionStrings["conexao_mysql_dev"].ConnectionString;
                 try
                 {
 
@@ -839,7 +838,6 @@ namespace CriandoSoapXML
 
             if (x == null)
             {
-                string conexao = ConfigurationManager.ConnectionStrings["conexao_mysql_dev"].ConnectionString;
                 try
                 {
                     string leitura = "SELECT COUNT(*) FROM Romaneio_Integracao I INNER JOIN Romaneio_Lote L ON I.ID_Lote = L.ID_LOTE WHERE I.DT_DELETE IS NULL AND NR_Romaneio = " + (NR_Romaneio) + " AND DC_Artigo = '" + (DC_Artigo) + "' AND DC_Cor = '" + (DC_Cor) + "' AND OP_Tipo = '" + (OP_Tipo) + "' AND NR_Cod_Produto = '" + (NR_Cod_Produto) + "'";
@@ -979,7 +977,6 @@ namespace CriandoSoapXML
 
             if (x == null)
             {
-                string conexao = ConfigurationManager.ConnectionStrings["conexao_mysql_dev"].ConnectionString;
                 try
                 {
                     string leitura = "SELECT COUNT(*) FROM Romaneio_Integracao_Pecas P INNER JOIN Romaneio_Integracao I ON P.ID_Romaneio = I.ID_Romaneio WHERE P.NR_Peca = '" + (NR_Peca) + "' AND I.ID_Lote = '" + ID_Lote + "'";
