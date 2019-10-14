@@ -48,6 +48,8 @@ namespace CriandoSoapXML
             XmlNodeList lote = doc.SelectNodes("lotes/Lote");
             XmlNodeList romaneio, peca;
             string vSqL = "SELECT ID_Cliente FROM Cadastro_Cliente WHERE Cnpj = '" + CNPJ + "'";
+            string vSqL2 = "";
+            string vSqL3 = "";
             int id_cliente;
             int ultimoid;
             MySqlCommand cme;
@@ -110,12 +112,12 @@ namespace CriandoSoapXML
                             t = verifica_Romaneio(NR_Romaneio, DC_Artigo, DC_Cor, OP_Tipo, NR_Cod_Produto, NR_Largura, NR_Gramatura, DC_Obs); //se repetir esses, nao adiciona o Romaneio novo.
                             if (t == null)
                             {
-                                vSqL = "INSERT INTO Romaneio_Integracao ";
-                                vSqL += "(ID_Lote, NR_Romaneio, DC_Artigo, DC_Cor, OP_Tipo, NR_Cod_Produto, NR_Largura, NR_Gramatura, DC_Obs) ";
-                                vSqL += "VALUES(@ID_Lote, @NR_Romaneio, @DC_Artigo, @DC_Cor, @OP_Tipo, @NR_Cod_Produto, @NR_Largura, @NR_Gramatura, @DC_Obs)";
+                                vSqL2 = "INSERT INTO Romaneio_Integracao ";
+                                vSqL2 += "(ID_Lote, NR_Romaneio, DC_Artigo, DC_Cor, OP_Tipo, NR_Cod_Produto, NR_Largura, NR_Gramatura, DC_Obs) ";
+                                vSqL2 += "VALUES(@ID_Lote, @NR_Romaneio, @DC_Artigo, @DC_Cor, @OP_Tipo, @NR_Cod_Produto, @NR_Largura, @NR_Gramatura, @DC_Obs)";
                                 Romaneio romaneio1 = new Romaneio();
 
-                                cmd = new MySqlCommand(vSqL, conection);
+                                cmd = new MySqlCommand(vSqL2, conection);
                                 try
                                 {
                                     cmd.Parameters.AddWithValue("@ID_Lote", ultimoid);
@@ -150,12 +152,12 @@ namespace CriandoSoapXML
 
                                         if (t == null)
                                         {
-                                            vSqL = "INSERT INTO Romaneio_Integracao_Pecas ";
-                                            vSqL += "(ID_Romaneio, NR_Peca, NR_Peso, NR_Comprimento, TP_Maquina) ";
-                                            vSqL += "VALUES(@ID_Romaneio, @NR_Peca, @NR_Peso, @NR_Comprimento, @TP_Maquina)";
+                                            vSqL3 = "INSERT INTO Romaneio_Integracao_Pecas ";
+                                            vSqL3 += "(ID_Romaneio, NR_Peca, NR_Peso, NR_Comprimento, TP_Maquina) ";
+                                            vSqL3 += "VALUES(@ID_Romaneio, @NR_Peca, @NR_Peso, @NR_Comprimento, @TP_Maquina)";
                                             Peca peca1 = new Peca();
 
-                                            cmd = new MySqlCommand(vSqL, conection);
+                                            cmd = new MySqlCommand(vSqL3, conection);
                                             try
                                             {
                                                 cmd.Parameters.AddWithValue("@ID_Romaneio", ultimoid_R);
