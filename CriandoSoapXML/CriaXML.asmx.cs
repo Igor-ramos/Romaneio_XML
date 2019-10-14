@@ -72,7 +72,7 @@ namespace CriandoSoapXML
                 {
                     vSqL = "INSERT INTO Romaneio_Lote ";
                     vSqL += "(ID_Cliente, NR_Nota_Fiscal, DT_Emissao, OP_Tipo_Lote, NR_Cnpj_Faccionista, ID_Status, DT_Status, COD_Verificacao) ";
-                    vSqL += "VALUES(@ID_Cliente, @NR_Nota_Fiscal, @OP_Tipo_Lote, @NR_Cnpj_Faccionista, '1', getdate(), @COD_Verificacao)";
+                    vSqL += "VALUES(@ID_Cliente, @NR_Nota_Fiscal, @OP_Tipo_Lote, @NR_Cnpj_Faccionista, '1', NOW(), @COD_Verificacao)";
                     Lote lote1 = new Lote();
 
                     cmd = new MySqlCommand(vSqL, conection);
@@ -176,6 +176,7 @@ namespace CriandoSoapXML
                                                 List<Erro> erros = new List<Erro>();
                                                 Erro erro1 = new Erro();
                                                 erro1.tipo = erro.ToString();
+                                                erros.Add(erro1);
                                                 xml erroxml = new xml(erros);
                                                 return erroxml;
                                             }
@@ -196,6 +197,7 @@ namespace CriandoSoapXML
                                     List<Erro> erros = new List<Erro>();
                                     Erro erro1 = new Erro();
                                     erro1.tipo = erro.ToString();
+                                    erros.Add(erro1);
                                     xml erroxml = new xml(erros);
                                     return erroxml;
                                 }
@@ -216,6 +218,7 @@ namespace CriandoSoapXML
                         List<Erro> erros = new List<Erro>();
                         Erro erro1 = new Erro();
                         erro1.tipo = erro.ToString();
+                        erros.Add(erro1);
                         xml erroxml = new xml(erros);
                         return erroxml;
                     }
@@ -233,6 +236,7 @@ namespace CriandoSoapXML
             List<Sucesso> sucessos = new List<Sucesso>();
             Sucesso sucesso = new Sucesso();
             sucesso.tipo = "Sucesso ao Enviar o(s) Lote(s) !";
+            sucessos.Add(sucesso);
             xml sucessoxml = new xml(sucessos);
             return sucessoxml;
         }
