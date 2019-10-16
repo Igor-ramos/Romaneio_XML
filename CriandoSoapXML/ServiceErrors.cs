@@ -33,7 +33,7 @@ namespace RomaneioService
 
             ErrorMessageLimiteComprimento = "Comprimento Excedido";
 
-            ErrorMessageTipo = "CNPJ deve ser '0' quando OP_Tipo_lote for igual a 1";
+            ErrorMessageTipo = "O campo <NR_Cnpj_Faccionista> não deve ter conteúdo, enquanto <OP_Tipo_Lote> igual a '1'";
         }
 
 

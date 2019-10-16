@@ -36,14 +36,30 @@ namespace CriandoSoapXML
             XmlDocument doc = new XmlDocument();
             geracdg geracdg = new geracdg();
             string codigo = geracdg.GerarCodigo();
+            DateTime data = DateTime.Now.Date;
 
             //caminhoArquivo = Directory.GetParent(Directory.GetParent(caminhoArquivo).FullName).FullName;
             //caminhoArquivo += @"\filmes.xml";
-
+            List<Erro> erroList = new List<Erro>();
             caminhoArquivo = Url;
-
+            bool ArquivoDanificado;
             XmlTextReader xmlReader = new XmlTextReader(caminhoArquivo);
-            doc.Load(caminhoArquivo);
+            try
+            {
+                doc.Load(caminhoArquivo);
+            }
+            catch (Exception ex)
+            {
+                ArquivoDanificado = true;
+                Erro xmlInvalido = new Erro();
+
+                xmlInvalido.codigo = "1000";
+                xmlInvalido.tipo = "O XML é invalido";
+                erroList.Add(xmlInvalido);
+
+                xml dadosXML = new xml(erroList);
+                return dadosXML;
+            }
 
             XmlNodeList lote = doc.SelectNodes("lotes/Lote");
             XmlNodeList romaneio, peca;
@@ -60,180 +76,392 @@ namespace CriandoSoapXML
 
             conection.Open();
             id_cliente = Convert.ToInt32(cmd.ExecuteScalar());
+            string idcliente = id_cliente.ToString();
             conection.Close();
 
             List<Lote> lotes = new List<Lote>();
-            foreach (XmlNode itemlote in lote)
+            try
             {
-                string NR_Nota_Fiscal = itemlote.SelectSingleNode("NR_Nota_Fiscal").InnerText;
-                string DT_Emissao = itemlote.SelectSingleNode("DT_Emissao").InnerText;
-                string OP_Tipo_Lote = itemlote.SelectSingleNode("OP_Tipo_Lote").InnerText;
-                string NR_Cnpj_Faccionista = itemlote.SelectSingleNode("NR_Cnpj_Faccionista").InnerText;
-                t = verifica_Lote(id_cliente, NR_Nota_Fiscal, DT_Emissao, OP_Tipo_Lote, NR_Cnpj_Faccionista); 
-                if (t == null)
+                foreach (XmlNode itemlote in lote)
                 {
-                    vSqL = "INSERT INTO Romaneio_Lote ";
-                    vSqL += "(ID_Cliente, NR_Nota_Fiscal, DT_Emissao, OP_Tipo_Lote, NR_Cnpj_Faccionista, ID_Status, DT_Status, COD_Verificacao) ";
-                    vSqL += "VALUES(@ID_Cliente, @NR_Nota_Fiscal, @DT_Emissao, @OP_Tipo_Lote, @NR_Cnpj_Faccionista, '1', NOW(), @COD_Verificacao)";
-                    Lote lote1 = new Lote();
-
-                    cmd = new MySqlCommand(vSqL, conection);
-                    try
+                    string NR_Nota_Fiscal = itemlote.SelectSingleNode("NR_Nota_Fiscal").InnerText;
+                    if (NR_Nota_Fiscal == null)
                     {
-                        cmd.Parameters.AddWithValue("@ID_Cliente", id_cliente);
-                        cmd.Parameters.AddWithValue("@NR_Nota_Fiscal", NR_Nota_Fiscal);
-                        cmd.Parameters.AddWithValue("@DT_Emissao", DT_Emissao);
-                        cmd.Parameters.AddWithValue("@OP_Tipo_Lote", OP_Tipo_Lote);
-                        cmd.Parameters.AddWithValue("@NR_Cnpj_Faccionista", NR_Cnpj_Faccionista);
-                        cmd.Parameters.AddWithValue("@COD_Verificacao", codigo);
+                        Erro xmlInvalido = new Erro();
 
-                        cmd.CommandType = CommandType.Text;
-                        conection.Open();
-                        cmd.ExecuteNonQuery();
+                        xmlInvalido.codigo = "1002";
+                        xmlInvalido.tipo = "Campo <NR_Nota_Fiscal> vazio!";
+                        erroList.Add(xmlInvalido);
 
-                        seleciona = "SELECT LAST_INSERT_ID()";
-                        cme = new MySqlCommand(seleciona, conection);
+                        xml dadosXML = new xml(erroList);
+                        return dadosXML;
+                    }
+                    string DT_Emissao = itemlote.SelectSingleNode("DT_Emissao").InnerText;
+                    if (DT_Emissao == null)
+                    {
+                        Erro xmlInvalido = new Erro();
 
-                        ultimoid = Convert.ToInt32(cme.ExecuteScalar());
+                        xmlInvalido.codigo = "1004";
+                        xmlInvalido.tipo = "Campo <DT_Emissao> vazio!";
+                        erroList.Add(xmlInvalido);
 
-                        conection.Close();
-                        romaneio = itemlote.SelectNodes("Romaneio");
-                        List<Romaneio> romaneios = new List<Romaneio>();
-                        foreach (XmlNode itemromaneio in romaneio)
+                        xml dadosXML = new xml(erroList);
+                        return dadosXML;
+                    }
+                    if (DT_Emissao[4] != '-')
+                    {
+                        Erro xmlInvalido = new Erro();
+
+                        xmlInvalido.codigo = "1036";
+                        xmlInvalido.tipo = "Campo <DT_Emissao> Tem formato de 'yyyy-mm-dd'";
+                        erroList.Add(xmlInvalido);
+
+                        xml dadosXML = new xml(erroList);
+                        return dadosXML;
+                    }
+                    DateTime dataxml = Convert.ToDateTime(DT_Emissao);
+                    if (dataxml > data)
+                    {
+                        Erro xmlInvalido = new Erro();
+
+                        xmlInvalido.codigo = "1005";
+                        xmlInvalido.tipo = "Campo <DT_Emissao> não pode conter uma data maior que a data atual! (yyyy-mm-dd)";
+                        erroList.Add(xmlInvalido);
+
+                        xml dadosXML = new xml(erroList);
+                        return dadosXML;
+                    }
+                    string OP_Tipo_Lote = itemlote.SelectSingleNode("OP_Tipo_Lote").InnerText;
+                    if (OP_Tipo_Lote == null)
+                    {
+                        Erro xmlInvalido = new Erro();
+
+                        xmlInvalido.codigo = "1006";
+                        xmlInvalido.tipo = "Campo <OP_Tipo_Lote> vazio!";
+                        erroList.Add(xmlInvalido);
+
+                        xml dadosXML = new xml(erroList);
+                        return dadosXML;
+                    }
+                    string NR_Cnpj_Faccionista = itemlote.SelectSingleNode("NR_Cnpj_Faccionista").InnerText;
+                    if (NR_Cnpj_Faccionista.Length > 14)
+                    {
+                        Erro xmlInvalido = new Erro();
+
+                        xmlInvalido.codigo = "1010";
+                        xmlInvalido.tipo = "Campo <NR_Cnpj_Faccionista> inválido! Máximo de 14 dígitos!";
+                        erroList.Add(xmlInvalido);
+
+                        xml dadosXML = new xml(erroList);
+                        return dadosXML;
+                    }
+                    t = verifica_Lote(idcliente, NR_Nota_Fiscal, DT_Emissao, OP_Tipo_Lote, NR_Cnpj_Faccionista);
+                    if (t == null)
+                    {
+                        vSqL = "INSERT INTO Romaneio_Lote ";
+                        vSqL += "(ID_Cliente, NR_Nota_Fiscal, DT_Emissao, OP_Tipo_Lote, NR_Cnpj_Faccionista, ID_Status, DT_Status, COD_Verificacao) ";
+                        vSqL += "VALUES(@ID_Cliente, @NR_Nota_Fiscal, @DT_Emissao, @OP_Tipo_Lote, @NR_Cnpj_Faccionista, '1', NOW(), @COD_Verificacao)";
+                        Lote lote1 = new Lote();
+
+                        cmd = new MySqlCommand(vSqL, conection);
+                        try
                         {
-                            string NR_Romaneio = itemromaneio.SelectSingleNode("NR_Romaneio").InnerText;
-                            string DC_Artigo = itemromaneio.SelectSingleNode("DC_Artigo").InnerText;
-                            string DC_Cor = itemromaneio.SelectSingleNode("DC_Cor").InnerText;
-                            string OP_Tipo = itemromaneio.SelectSingleNode("OP_Tipo").InnerText;
-                            string NR_Cod_Produto = itemromaneio.SelectSingleNode("NR_Cod_Produto").InnerText;
-                            string NR_Largura = itemromaneio.SelectSingleNode("NR_Largura").InnerText;
-                            string NR_Gramatura = itemromaneio.SelectSingleNode("NR_Gramatura").InnerText;
-                            string DC_Obs = itemromaneio.SelectSingleNode("DC_Obs").InnerText;
-                            t = verifica_Romaneio(NR_Romaneio, DC_Artigo, DC_Cor, OP_Tipo, NR_Cod_Produto, NR_Largura, NR_Gramatura, DC_Obs); //se repetir esses, nao adiciona o Romaneio novo.
-                            if (t == null)
+                            cmd.Parameters.AddWithValue("@ID_Cliente", id_cliente);
+                            cmd.Parameters.AddWithValue("@NR_Nota_Fiscal", NR_Nota_Fiscal);
+                            cmd.Parameters.AddWithValue("@DT_Emissao", DT_Emissao);
+                            cmd.Parameters.AddWithValue("@OP_Tipo_Lote", OP_Tipo_Lote);
+                            cmd.Parameters.AddWithValue("@NR_Cnpj_Faccionista", NR_Cnpj_Faccionista);
+                            cmd.Parameters.AddWithValue("@COD_Verificacao", codigo);
+
+                            cmd.CommandType = CommandType.Text;
+                            conection.Open();
+                            cmd.ExecuteNonQuery();
+
+                            seleciona = "SELECT LAST_INSERT_ID()";
+                            cme = new MySqlCommand(seleciona, conection);
+
+                            ultimoid = Convert.ToInt32(cme.ExecuteScalar());
+
+                            conection.Close();
+                            romaneio = itemlote.SelectNodes("Romaneio");
+                            List<Romaneio> romaneios = new List<Romaneio>();
+                            try
                             {
-                                vSqL2 = "INSERT INTO Romaneio_Integracao ";
-                                vSqL2 += "(ID_Lote, NR_Romaneio, DC_Artigo, DC_Cor, OP_Tipo, NR_Cod_Produto, NR_Largura, NR_Gramatura, DC_Obs) ";
-                                vSqL2 += "VALUES(@ID_Lote, @NR_Romaneio, @DC_Artigo, @DC_Cor, @OP_Tipo, @NR_Cod_Produto, @NR_Largura, @NR_Gramatura, @DC_Obs)";
-                                Romaneio romaneio1 = new Romaneio();
-
-                                cmd = new MySqlCommand(vSqL2, conection);
-                                try
+                                foreach (XmlNode itemromaneio in romaneio)
                                 {
-                                    cmd.Parameters.AddWithValue("@ID_Lote", ultimoid);
-                                    cmd.Parameters.AddWithValue("@NR_Romaneio", NR_Romaneio);
-                                    cmd.Parameters.AddWithValue("@DC_Artigo", DC_Artigo);
-                                    cmd.Parameters.AddWithValue("@DC_Cor", DC_Cor);
-                                    cmd.Parameters.AddWithValue("@OP_Tipo", OP_Tipo);
-                                    cmd.Parameters.AddWithValue("@NR_Cod_Produto", NR_Cod_Produto);
-                                    cmd.Parameters.AddWithValue("@NR_Largura", NR_Largura);
-                                    cmd.Parameters.AddWithValue("@NR_Gramatura", NR_Gramatura);
-                                    cmd.Parameters.AddWithValue("@DC_Obs", DC_Obs);
-
-                                    cmd.CommandType = CommandType.Text;
-                                    conection.Open();
-                                    cmd.ExecuteNonQuery();
-
-                                    seleciona = "SELECT LAST_INSERT_ID()";
-                                    cme = new MySqlCommand(seleciona, conection);
-
-                                    int ultimoid_R = Convert.ToInt32(cme.ExecuteScalar());
-
-                                    conection.Close();
-                                    peca = itemromaneio.SelectNodes("Peca");
-                                    List<Peca> pecas = new List<Peca>();
-                                    foreach (XmlNode itempeca in peca)
+                                    string NR_Romaneio = itemromaneio.SelectSingleNode("NR_Romaneio").InnerText;
+                                    if (NR_Romaneio == null)
                                     {
-                                        string NR_Peca = itempeca.SelectSingleNode("NR_Peca").InnerText;
-                                        string NR_Peso = itempeca.SelectSingleNode("NR_Peso").InnerText;
-                                        string NR_Comprimento = itempeca.SelectSingleNode("NR_Comprimento").InnerText;
-                                        string TP_Maquina = itempeca.SelectSingleNode("TP_Maquina").InnerText;
-                                        t = verifica_Peca(ultimoid, NR_Peca, NR_Peso, NR_Comprimento, TP_Maquina); //se repetir esses, nao adiciona peça nova.
+                                        Erro xmlInvalido = new Erro();
 
-                                        if (t == null)
+                                        xmlInvalido.codigo = "1012";
+                                        xmlInvalido.tipo = "Campo <NR_Romaneio> vazio!";
+                                        erroList.Add(xmlInvalido);
+
+                                        xml dadosXML = new xml(erroList);
+                                        return dadosXML;
+                                    }
+                                    string DC_Artigo = itemromaneio.SelectSingleNode("DC_Artigo").InnerText;
+                                    if (DC_Artigo == null)
+                                    {
+                                        Erro xmlInvalido = new Erro();
+
+                                        xmlInvalido.codigo = "1014";
+                                        xmlInvalido.tipo = "Campo <DC_Artigo> vazio!";
+                                        erroList.Add(xmlInvalido);
+
+                                        xml dadosXML = new xml(erroList);
+                                        return dadosXML;
+                                    }
+                                    string DC_Cor = itemromaneio.SelectSingleNode("DC_Cor").InnerText;
+                                    if (DC_Cor == null)
+                                    {
+                                        Erro xmlInvalido = new Erro();
+
+                                        xmlInvalido.codigo = "1016";
+                                        xmlInvalido.tipo = "Campo <DC_Cor> vazio!";
+                                        erroList.Add(xmlInvalido);
+
+                                        xml dadosXML = new xml(erroList);
+                                        return dadosXML;
+                                    }
+                                    string OP_Tipo = itemromaneio.SelectSingleNode("OP_Tipo").InnerText;
+                                    if (OP_Tipo == null)
+                                    {
+                                        Erro xmlInvalido = new Erro();
+
+                                        xmlInvalido.codigo = "1018";
+                                        xmlInvalido.tipo = "Campo <OP_Tipo> vazio!";
+                                        erroList.Add(xmlInvalido);
+
+                                        xml dadosXML = new xml(erroList);
+                                        return dadosXML;
+                                    }
+                                    string NR_Cod_Produto = itemromaneio.SelectSingleNode("NR_Cod_Produto").InnerText;
+                                    if (NR_Cod_Produto == null)
+                                    {
+                                        Erro xmlInvalido = new Erro();
+
+                                        xmlInvalido.codigo = "1020";
+                                        xmlInvalido.tipo = "Campo <NR_Cod_Produto> vazio!";
+                                        erroList.Add(xmlInvalido);
+
+                                        xml dadosXML = new xml(erroList);
+                                        return dadosXML;
+                                    }
+                                    string NR_Largura = itemromaneio.SelectSingleNode("NR_Largura").InnerText;
+                                    if (NR_Largura == null)
+                                    {
+                                        Erro xmlInvalido = new Erro();
+
+                                        xmlInvalido.codigo = "1022";
+                                        xmlInvalido.tipo = "Campo <NR_Largura> vazio!";
+                                        erroList.Add(xmlInvalido);
+
+                                        xml dadosXML = new xml(erroList);
+                                        return dadosXML;
+                                    }
+                                    string NR_Gramatura = itemromaneio.SelectSingleNode("NR_Gramatura").InnerText;
+                                    if (NR_Gramatura == null)
+                                    {
+                                        Erro xmlInvalido = new Erro();
+
+                                        xmlInvalido.codigo = "1024";
+                                        xmlInvalido.tipo = "Campo <NR_Gramatura> vazio!";
+                                        erroList.Add(xmlInvalido);
+
+                                        xml dadosXML = new xml(erroList);
+                                        return dadosXML;
+                                    }
+                                    string DC_Obs = itemromaneio.SelectSingleNode("DC_Obs").InnerText;
+                                    t = verifica_Romaneio(idcliente, NR_Romaneio, DC_Artigo, DC_Cor, OP_Tipo, NR_Cod_Produto, NR_Largura, NR_Gramatura, DC_Obs); //se repetir esses, nao adiciona o Romaneio novo.
+                                    if (t == null)
+                                    {
+                                        vSqL2 = "INSERT INTO Romaneio_Integracao ";
+                                        vSqL2 += "(ID_Lote, NR_Romaneio, DC_Artigo, DC_Cor, OP_Tipo, NR_Cod_Produto, NR_Largura, NR_Gramatura, DC_Obs) ";
+                                        vSqL2 += "VALUES(@ID_Lote, @NR_Romaneio, @DC_Artigo, @DC_Cor, @OP_Tipo, @NR_Cod_Produto, @NR_Largura, @NR_Gramatura, @DC_Obs)";
+                                        Romaneio romaneio1 = new Romaneio();
+
+                                        cmd = new MySqlCommand(vSqL2, conection);
+                                        try
                                         {
-                                            vSqL3 = "INSERT INTO Romaneio_Integracao_Pecas ";
-                                            vSqL3 += "(ID_Romaneio, NR_Peca, NR_Peso, NR_Comprimento, TP_Maquina) ";
-                                            vSqL3 += "VALUES(@ID_Romaneio, @NR_Peca, @NR_Peso, @NR_Comprimento, @TP_Maquina)";
-                                            Peca peca1 = new Peca();
+                                            cmd.Parameters.AddWithValue("@ID_Lote", ultimoid);
+                                            cmd.Parameters.AddWithValue("@NR_Romaneio", NR_Romaneio);
+                                            cmd.Parameters.AddWithValue("@DC_Artigo", DC_Artigo);
+                                            cmd.Parameters.AddWithValue("@DC_Cor", DC_Cor);
+                                            cmd.Parameters.AddWithValue("@OP_Tipo", OP_Tipo);
+                                            cmd.Parameters.AddWithValue("@NR_Cod_Produto", NR_Cod_Produto);
+                                            cmd.Parameters.AddWithValue("@NR_Largura", NR_Largura);
+                                            cmd.Parameters.AddWithValue("@NR_Gramatura", NR_Gramatura);
+                                            cmd.Parameters.AddWithValue("@DC_Obs", DC_Obs);
 
-                                            cmd = new MySqlCommand(vSqL3, conection);
+                                            cmd.CommandType = CommandType.Text;
+                                            conection.Open();
+                                            cmd.ExecuteNonQuery();
+
+                                            seleciona = "SELECT LAST_INSERT_ID()";
+                                            cme = new MySqlCommand(seleciona, conection);
+
+                                            int ultimoid_R = Convert.ToInt32(cme.ExecuteScalar());
+
+                                            conection.Close();
+                                            peca = itemromaneio.SelectNodes("Peca");
+                                            List<Peca> pecas = new List<Peca>();
                                             try
-                                            {
-                                                cmd.Parameters.AddWithValue("@ID_Romaneio", ultimoid_R);
-                                                cmd.Parameters.AddWithValue("@NR_Peca", NR_Peca);
-                                                cmd.Parameters.AddWithValue("@NR_Peso", NR_Peso);
-                                                cmd.Parameters.AddWithValue("@NR_Comprimento", NR_Comprimento);
-                                                cmd.Parameters.AddWithValue("@TP_Maquina", TP_Maquina);
+                                            { //colocar try catch nos outros negocio tudo
+                                                foreach (XmlNode itempeca in peca)
+                                                {
+                                                    string NR_Peca = itempeca.SelectSingleNode("NR_Peca").InnerText;
+                                                    if (NR_Peca == null)
+                                                    {
+                                                        Erro xmlInvalido = new Erro();
 
-                                                cmd.CommandType = CommandType.Text;
-                                                conection.Open();
+                                                        xmlInvalido.codigo = "1028";
+                                                        xmlInvalido.tipo = "Campo <NR_Peca> vazio!";
+                                                        erroList.Add(xmlInvalido);
 
-                                                cmd.ExecuteNonQuery();
+                                                        xml dadosXML = new xml(erroList);
+                                                        return dadosXML;
+                                                    }
+                                                    string NR_Peso = itempeca.SelectSingleNode("NR_Peso").InnerText;
+                                                    if (NR_Peso == null)
+                                                    {
+                                                        Erro xmlInvalido = new Erro();
 
-                                                conection.Close();
+                                                        xmlInvalido.codigo = "1030";
+                                                        xmlInvalido.tipo = "Campo <NR_Peso> vazio!";
+                                                        erroList.Add(xmlInvalido);
+
+                                                        xml dadosXML = new xml(erroList);
+                                                        return dadosXML;
+                                                    }
+                                                    string NR_Comprimento = itempeca.SelectSingleNode("NR_Comprimento").InnerText;
+                                                    if (NR_Peso == null)
+                                                    {
+                                                        Erro xmlInvalido = new Erro();
+
+                                                        xmlInvalido.codigo = "1030";
+                                                        xmlInvalido.tipo = "Campo <NR_Peso> vazio!";
+                                                        erroList.Add(xmlInvalido);
+
+                                                        xml dadosXML = new xml(erroList);
+                                                        return dadosXML;
+                                                    }
+
+                                                    t = verifica_Peca(ultimoid, NR_Peca, NR_Peso, NR_Comprimento); //se repetir esses, nao adiciona peça nova.
+
+                                                    if (t == null)
+                                                    {
+                                                        vSqL3 = "INSERT INTO Romaneio_Integracao_Pecas ";
+                                                        vSqL3 += "(ID_Romaneio, NR_Peca, NR_Peso, NR_Comprimento) ";
+                                                        vSqL3 += "VALUES(@ID_Romaneio, @NR_Peca, @NR_Peso, @NR_Comprimento)";
+                                                        Peca peca1 = new Peca();
+
+                                                        cmd = new MySqlCommand(vSqL3, conection);
+                                                        try
+                                                        {
+                                                            cmd.Parameters.AddWithValue("@ID_Romaneio", ultimoid_R);
+                                                            cmd.Parameters.AddWithValue("@NR_Peca", NR_Peca);
+                                                            cmd.Parameters.AddWithValue("@NR_Peso", NR_Peso);
+                                                            cmd.Parameters.AddWithValue("@NR_Comprimento", NR_Comprimento);
+
+
+                                                            cmd.CommandType = CommandType.Text;
+                                                            conection.Open();
+
+                                                            cmd.ExecuteNonQuery();
+
+                                                            conection.Close();
+                                                        }
+                                                        catch (Exception erro)
+                                                        {
+                                                            List<Erro> erros = new List<Erro>();
+                                                            Erro erro1 = new Erro();
+                                                            erro1.tipo = erro.ToString();
+                                                            erros.Add(erro1);
+                                                            xml erroxml = new xml(erros);
+                                                            return erroxml;
+                                                        }
+                                                        finally
+                                                        {
+                                                            conection.Close();
+                                                            conection.Dispose();
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        return t;
+                                                    }
+                                                }
                                             }
-                                            catch (Exception erro)
+                                            catch
                                             {
-                                                List<Erro> erros = new List<Erro>();
-                                                Erro erro1 = new Erro();
-                                                erro1.tipo = erro.ToString();
-                                                erros.Add(erro1);
-                                                xml erroxml = new xml(erros);
-                                                return erroxml;
-                                            }
-                                            finally
-                                            {
-                                                conection.Close();
-                                                conection.Dispose();
+                                                Erro xmlInvalidoooo = new Erro();
+
+                                                xmlInvalidoooo.codigo = "1027";
+                                                xmlInvalidoooo.tipo = "Peça não identificada!";
+                                                erroList.Add(xmlInvalidoooo);
+
+                                                xml dadoooosXML = new xml(erroList);
+                                                return dadoooosXML;
                                             }
                                         }
-                                        else
+                                        catch (Exception erro)
                                         {
-                                            return t;
+                                            List<Erro> erros = new List<Erro>();
+                                            Erro erro1 = new Erro();
+                                            erro1.tipo = erro.ToString();
+                                            erros.Add(erro1);
+                                            xml erroxml = new xml(erros);
+                                            return erroxml;
+                                        }
+                                        finally
+                                        {
+                                            conection.Close();
+                                            conection.Dispose();
                                         }
                                     }
-                                }
-                                catch (Exception erro)
-                                {
-                                    List<Erro> erros = new List<Erro>();
-                                    Erro erro1 = new Erro();
-                                    erro1.tipo = erro.ToString();
-                                    erros.Add(erro1);
-                                    xml erroxml = new xml(erros);
-                                    return erroxml;
-                                }
-                                finally
-                                {
-                                    conection.Close();
-                                    conection.Dispose();
+                                    else
+                                    {
+                                        return t;
+                                    }
                                 }
                             }
-                            else
+                            catch(Exception erro)
                             {
-                                return t;
+                                Erro xmlInvalidooo = new Erro();
+
+                                xmlInvalidooo.codigo = "1011";
+                                xmlInvalidooo.tipo = "Romaneio não identificado!";
+                                erroList.Add(xmlInvalidooo);
+
+                                xml dadooosXML = new xml(erroList);
+                                return dadooosXML;
                             }
+                            
+                        }
+                        finally
+                        {
+                            conection.Close();
+                            conection.Dispose();
                         }
                     }
-                    catch (Exception erro)
+                    else
                     {
-                        List<Erro> erros = new List<Erro>();
-                        Erro erro1 = new Erro();
-                        erro1.tipo = erro.ToString();
-                        erros.Add(erro1);
-                        xml erroxml = new xml(erros);
-                        return erroxml;
-                    }
-                    finally
-                    {
-                        conection.Close();
-                        conection.Dispose();
+                        return t;
                     }
                 }
-                else
-                {
-                    return t;
-                }
+            }
+            catch 
+            {
+                Erro xmlInvalidoo = new Erro();
+
+                xmlInvalidoo.codigo = "1027";
+                xmlInvalidoo.tipo = "Peça não identificada!";
+                erroList.Add(xmlInvalidoo);
+
+                xml dadoosXML = new xml(erroList);
+                return dadoosXML;
             }
             List<Sucesso> sucessos = new List<Sucesso>();
             Sucesso sucesso = new Sucesso();
@@ -241,6 +469,7 @@ namespace CriandoSoapXML
             sucessos.Add(sucesso);
             xml sucessoxml = new xml(sucessos);
             return sucessoxml;
+
         }
 
         [WebMethod(Description = "Artigo e Cor")]
@@ -356,7 +585,7 @@ namespace CriandoSoapXML
                                                             cmdcm.CommandText = vSQL;
                                                             using (var dy = cmdcm.ExecuteReader(CommandBehavior.CloseConnection))
                                                             {
-                                                                if(dy.HasRows)
+                                                                if (dy.HasRows)
                                                                 {
                                                                     while (dy.Read())
                                                                     {
@@ -471,7 +700,7 @@ namespace CriandoSoapXML
                             cmd.CommandText = vSQL;
                             using (var dr = cmd.ExecuteReader(CommandBehavior.CloseConnection))
                             {
-                                if(dr.HasRows)
+                                if (dr.HasRows)
                                 {
                                     while (dr.Read())
                                     {
@@ -608,7 +837,7 @@ namespace CriandoSoapXML
                     }
                     break;
             }
-            
+
             return null;
         }
 
@@ -667,7 +896,7 @@ namespace CriandoSoapXML
             return null;
 
         }
-        public xml verifica_Lote(int id, string NR_Nota_Fiscal, string DT_Emissao, string OP_Tipo_Lote, string NR_Cnpj_Faccionista)
+        public xml verifica_Lote(string id, string NR_Nota_Fiscal, string DT_Emissao, string OP_Tipo_Lote, string NR_Cnpj_Faccionista)
         {
             MySqlConnection con = null;
             ServiceErrors erroLote = new ServiceErrors();
@@ -683,11 +912,41 @@ namespace CriandoSoapXML
 
 
                     erro_Lote_Lista.erro_Lote = erroLote.ErrorMessageTipo;
+                    erro_Lote_Lista.CodigoErro = "1009";
 
                     erroList.Add(erro_Lote_Lista);
                     xml dadosXML = new xml(erroList);
                     return dadosXML;
                 }
+            }
+            else if (Convert.ToInt32(OP_Tipo_Lote) == 2 || Convert.ToInt32(OP_Tipo_Lote) == 3)
+            {
+                if (NR_Cnpj_Faccionista == "0")
+                {
+                    Lote erro_Lote_Lista = new Lote();
+
+
+                    erro_Lote_Lista.erro_Lote = "Campo <NR_Cnpj_Faccionista> vazio, enquanto <OP_Tipo_Lote> diferente de '1'";
+                    erro_Lote_Lista.CodigoErro = "1008";
+
+                    erroList.Add(erro_Lote_Lista);
+                    xml dadosXML = new xml(erroList);
+                    return dadosXML;
+                }
+            }
+            else
+            {
+                Erro xmlInvalido = new Erro();
+
+                Lote erro_Lote_Lista = new Lote();
+
+
+                erro_Lote_Lista.erro_Lote = "Campo <OP_Tipo_Lote> inválido! [1 - 3]";
+                erro_Lote_Lista.CodigoErro = "1007";
+
+                erroList.Add(erro_Lote_Lista);
+                xml dadosXML = new xml(erroList);
+                return dadosXML;
             }
 
             xml t = Campos_Lote(NR_Nota_Fiscal, DT_Emissao, OP_Tipo_Lote, NR_Cnpj_Faccionista);
@@ -698,7 +957,7 @@ namespace CriandoSoapXML
                 try
                 {
 
-                    string leitura = "SELECT COUNT(*) FROM Romaneio_Lote L INNER JOIN Cadastro_Cliente C ON L.ID_Cliente = C.ID_Cliente WHERE NR_Nota_Fiscal = " + (NR_Nota_Fiscal) + " AND NR_Cnpj_Faccionista = '" + (NR_Cnpj_Faccionista) + "'";
+                    string leitura = "SELECT COUNT(*) FROM Romaneio_Lote L INNER JOIN Cadastro_Cliente C ON L.ID_Cliente =" + id + "  WHERE NR_Nota_Fiscal = " + (NR_Nota_Fiscal) + " AND NR_Cnpj_Faccionista = '" + (NR_Cnpj_Faccionista) + "'";
                     using (var connection = new MySqlConnection("Server=seiren_dev.mysql.dbaas.com.br;Port=3306;Database=seiren_dev;Uid=seiren_dev;Pwd=S3iR3n@1973dev;"))
                     {
                         connection.Open(); using (var cmd = new MySqlCommand())
@@ -719,8 +978,11 @@ namespace CriandoSoapXML
                             else
                             {
                                 Lote erro_lote_Lista = new Lote();
-                                erro_lote_Lista.erro_Lote = "Lote já cadastrado";
-                                erro_lote_Lista.id_lote = id;
+                                erro_lote_Lista.erro_Lote = "Campo <NR_Nota_Fiscal> repetido ou inválido! Máximo de 9 dígitos!";
+                                erro_lote_Lista.CodigoErro = "1003";
+                                erro_lote_Lista.dc_tipo = OP_Tipo_Lote;
+                                erro_lote_Lista.nr_cnpj_faccionista = NR_Cnpj_Faccionista;
+                                erro_lote_Lista.nr_nota_fiscal = NR_Nota_Fiscal;
                                 erroList.Add(erro_lote_Lista);
                                 xml dadosXML = new xml(erroList);
                                 return dadosXML;
@@ -843,7 +1105,7 @@ namespace CriandoSoapXML
             return null;
 
         }
-        public xml verifica_Romaneio(string NR_Romaneio, string DC_Artigo, string DC_Cor, string OP_Tipo, string NR_Cod_Produto, string NR_Largura, string NR_Gramatura, string DC_Obs)
+        public xml verifica_Romaneio(string id, string NR_Romaneio, string DC_Artigo, string DC_Cor, string OP_Tipo, string NR_Cod_Produto, string NR_Largura, string NR_Gramatura, string DC_Obs)
         {
             MySqlConnection con = null;
 
@@ -895,6 +1157,7 @@ namespace CriandoSoapXML
                     string leitura = "SELECT COUNT(*) FROM Romaneio_Integracao I INNER JOIN Romaneio_Lote L ON I.ID_Lote = L.ID_LOTE WHERE I.DT_DELETE IS NULL AND NR_Romaneio = " + (NR_Romaneio) + " AND DC_Artigo = '" + (DC_Artigo) + "' AND DC_Cor = '" + (DC_Cor) + "' AND OP_Tipo = '" + (OP_Tipo) + "' AND NR_Cod_Produto = '" + (NR_Cod_Produto) + "'";
                     using (var connection = new MySqlConnection("Server=seiren_dev.mysql.dbaas.com.br;Port=3306;Database=seiren_dev;Uid=seiren_dev;Pwd=S3iR3n@1973dev;"))
                     {
+                        List<Cor> cores = new List<Cor>();
                         connection.Open(); using (var cmd = new MySqlCommand())
                         {
                             cmd.Connection = connection;
@@ -909,12 +1172,60 @@ namespace CriandoSoapXML
 
                             if (cont < 1)
                             {
+                                leitura = "SELECT * FROM v_SaldoArtigoCor WHERE ID_Cliente = '" + id + "'";
+                                using (var connecCtion = new MySqlConnection("Server=seiren_dev.mysql.dbaas.com.br;Port=3306;Database=seiren_dev;Uid=seiren_dev;Pwd=S3iR3n@1973dev;"))
+                                {
+                                    connecCtion.Open(); using (var cCmd = new MySqlCommand())
+                                    {
+                                        cCmd.Connection = connecCtion;
+                                        cCmd.CommandType = CommandType.Text;
+                                        cCmd.CommandText = leitura; //aqui e executado a interacao com o banco
+                                        using (var dr = cCmd.ExecuteReader(CommandBehavior.CloseConnection))
+                                        {
+                                            if (dr.HasRows)
+                                            {
+                                                while (dr.Read())
+                                                {
+                                                    Cor cor = new Cor();
+                                                    cor.artigo = dr["Artigo"].ToString();
+                                                    cor.corl = dr["Cor"].ToString();
+                                                    cores.Add(cor);
+                                                }
+                                                dr.Close();
+                                                dr.Dispose();
+                                                int conta = 0;
+                                                foreach (var i in cores)
+                                                {
+                                                    if (DC_Artigo != i.artigo)
+                                                        conta++;
+                                                    if (DC_Cor != i.corl)
+                                                        conta++;
+                                                }
+                                                if (conta > 0)
+                                                {
+                                                    Romaneio erro_Rom_Lista = new Romaneio();
+                                                    erro_Rom_Lista.erro_Romaneio = "Campo <DC_Artigo> ou <DC_Cor> inválidos, favor consultar sua tabela de artigos.";
+
+                                                    erroList.Add(erro_Rom_Lista);
+                                                    xml dadossXML = new xml(erroList);
+                                                    return dadossXML;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                                 return null;
                             }
                             else
-                            {
+                            {                                
                                 Romaneio erro_Romaneio_Lista = new Romaneio();
-                                erro_Romaneio_Lista.erro_Romaneio = "Romaneio já cadastrado";
+                                erro_Romaneio_Lista.erro_Romaneio = "Campo <NR_Nota_Fiscal> repetido ou inválido! Máximo de 9 dígitos!s";
+                                erro_Romaneio_Lista.CodigoErro = "1003";
+                                erro_Romaneio_Lista.dc_artigo = DC_Artigo;
+                                erro_Romaneio_Lista.dc_cor = DC_Cor;
+                                erro_Romaneio_Lista.dc_obs = DC_Obs;
+                                erro_Romaneio_Lista.nr_cod_produto = NR_Cod_Produto;
+                                erro_Romaneio_Lista.nr_romaneio = NR_Romaneio;
                                 erroList.Add(erro_Romaneio_Lista);
                                 xml dadosXML = new xml(erroList);
                                 return dadosXML;
@@ -933,7 +1244,7 @@ namespace CriandoSoapXML
 
             }
         }
-        public xml Campos_Peca(string NR_Peca, string NR_Peso, string NR_Comprimento, string TP_Maquina)
+        public xml Campos_Peca(string NR_Peca, string NR_Peso, string NR_Comprimento)
         {
             MySqlConnection con = null;
 
@@ -958,9 +1269,6 @@ namespace CriandoSoapXML
             if (erro_Peca_Lista2.erro_Peca != null)
                 cont1 = 3;
 
-            erro_Peca_Lista3.erro_Peca = contador.Max10(TP_Maquina, "TP_Maquina");
-            if (erro_Peca_Lista3.erro_Peca != null)
-                cont1 = 4;
 
 
             if (cont1 == 1)
@@ -991,7 +1299,7 @@ namespace CriandoSoapXML
             return null;
 
         }
-        public xml verifica_Peca(int ID_Lote, string NR_Peca, string NR_Peso, string NR_Comprimento, string TP_Maquina)
+        public xml verifica_Peca(int ID_Lote, string NR_Peca, string NR_Peso, string NR_Comprimento)
         {
             MySqlConnection con = null;
 
@@ -1025,7 +1333,7 @@ namespace CriandoSoapXML
                 return dadosXML;
             }
 
-            xml x = Campos_Peca(NR_Peca, NR_Peso, NR_Comprimento, TP_Maquina);
+            xml x = Campos_Peca(NR_Peca, NR_Peso, NR_Comprimento);
 
             if (x == null)
             {
@@ -1052,7 +1360,10 @@ namespace CriandoSoapXML
                             else
                             {
                                 Peca erro_Peca_Lista = new Peca();
-                                erro_Peca_Lista.erro_Peca = "Peça já cadastrada";
+                                erro_Peca_Lista.erro_Peca = "Campo <NR_Peca> repetido ou inválido! Máximo de 10 dígitos!";
+                                erro_Peca_Lista.nr_comprimento = comprimento;
+                                erro_Peca_Lista.nr_peca = NR_Peca;
+                                erro_Peca_Lista.id_lote = ID_Lote;
                                 erroList.Add(erro_Peca_Lista);
                                 xml dadosXML = new xml(erroList);
                                 return dadosXML;
@@ -1147,6 +1458,10 @@ namespace CriandoSoapXML
 
         public class Erro
         {
+            [XmlElement("CódigoErro")]
+            public string codigo { get; set; }
+
+
             [XmlElement("TipoErro")]
             public string tipo { get; set; }
         }
@@ -1176,6 +1491,9 @@ namespace CriandoSoapXML
 
             [XmlElement("Ocorreu_Um_Erro")]
             public string erro_Lote { get; set; }
+
+            [XmlElement("CódigoErro")]
+            public string CodigoErro { get; set; }
 
             //[XmlElement("DT_Emissao")]  
             //public DateTime DT_Emissao { get; set; } nao aceita por ser um time date time
@@ -1218,6 +1536,9 @@ namespace CriandoSoapXML
 
             [XmlElement("Ocorreu_Um_Erro")]
             public string erro_Romaneio { get; set; }
+
+            [XmlElement("CódigoErro")]
+            public string CodigoErro { get; set; }
         }
 
         public class Peca
@@ -1227,6 +1548,9 @@ namespace CriandoSoapXML
 
             [XmlElement("ID_Peca")]
             public int id_peca { get; set; }
+
+            [XmlElement("ID_Lote")]
+            public int id_lote { get; set; }
 
             [XmlElement("NR_Peca")]
             public string nr_peca { get; set; }
@@ -1244,6 +1568,9 @@ namespace CriandoSoapXML
 
             [XmlElement("Ocorreu_Um_Erro")]
             public string erro_Peca { get; set; }
+
+            [XmlElement("CódigoErro")]
+            public string CodigoErro { get; set; }
         }
 
         public class Cartao
