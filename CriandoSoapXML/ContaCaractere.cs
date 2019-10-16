@@ -26,6 +26,16 @@ namespace RomaneioService
             }
             return null;
         }
+        public string Max3(string contaCaracter, string Nome)
+        {
+            if (isOverLenght(contaCaracter.Length, 3))
+
+            {
+
+                return "Limite de Caracteres no campo '" + Nome + "' Excedido";
+            }
+            return null;
+        }
         public string Max4(string contaCaracter, string Nome)
         {
             if (isOverLenght(contaCaracter.Length, 4))

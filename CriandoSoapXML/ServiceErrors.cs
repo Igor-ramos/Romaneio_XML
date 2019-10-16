@@ -23,15 +23,15 @@ namespace RomaneioService
         {
             ErrorMessage = "Romaneio Cadastrado";
 
-            ErrorMessageLimiteLargura = "Largura Excedida";
+            ErrorMessageLimiteLargura = "Campo <NR_Largura> inválido [0,4 - 3,0]";
 
-            ErrorMessageLimiteGramatura = "Gramatura Excedida";
+            ErrorMessageLimiteGramatura = "Campo <NR_Gramatura> inválido! [0 - 600]";
 
-            ErrorMessageLimiteTipo = "Tipo Fora de Padrão";
+            ErrorMessageLimiteTipo = "Campo <OP_Tipo> inválido! [1 - 3]";
 
-            ErrorMessageLimitePeso = "Peso Excedido";
+            ErrorMessageLimitePeso = "Campo <NR_Peso> inválido! [0,3 - 160]";
 
-            ErrorMessageLimiteComprimento = "Comprimento Excedido";
+            ErrorMessageLimiteComprimento = "Campo <NR_Comprimento> inválido! [0 - 1200]";
 
             ErrorMessageTipo = "O campo <NR_Cnpj_Faccionista> não deve ter conteúdo, enquanto <OP_Tipo_Lote> igual a '1'";
         }

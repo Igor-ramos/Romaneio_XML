@@ -1038,15 +1038,15 @@ namespace CriandoSoapXML
             if (erro_Rom_Lista4.erro_Romaneio != null)
                 cont1 = 5;
 
-            erro_Rom_Lista5.erro_Romaneio = contador.Max4(NR_Cod_Produto, "NR_Largura");
+            erro_Rom_Lista5.erro_Romaneio = contador.Max4(NR_Largura, "NR_Largura");
             if (erro_Rom_Lista5.erro_Romaneio != null)
                 cont1 = 6;
 
-            erro_Rom_Lista6.erro_Romaneio = contador.Max50(NR_Cod_Produto, "NR_Gramatura");
+            erro_Rom_Lista6.erro_Romaneio = contador.Max3(NR_Gramatura, "NR_Gramatura");
             if (erro_Rom_Lista6.erro_Romaneio != null)
                 cont1 = 7;
 
-            erro_Rom_Lista7.erro_Romaneio = contador.Max25(NR_Cod_Produto, "Dc_Obs");
+            erro_Rom_Lista7.erro_Romaneio = contador.Max50(DC_Obs, "Dc_Obs");
             if (erro_Rom_Lista7.erro_Romaneio != null)
                 cont1 = 8;
 
@@ -1097,6 +1097,7 @@ namespace CriandoSoapXML
             }
             if (cont1 == 8)
             {
+                erro_Rom_Lista7.CodigoErro = "1026";
                 erroList.Add(erro_Rom_Lista7);
                 xml dadosXML = new xml(erroList);
                 return dadosXML;
@@ -1120,6 +1121,7 @@ namespace CriandoSoapXML
 
 
                 erro_Rom_Lista.erro_Romaneio = erroRomaneio.ErrorMessageLimiteLargura;
+                erro_Rom_Lista.CodigoErro = "1023";
 
                 erroList.Add(erro_Rom_Lista);
                 xml dadosXML = new xml(erroList);
@@ -1131,6 +1133,7 @@ namespace CriandoSoapXML
 
 
                 erro_Rom_Lista.erro_Romaneio = erroRomaneio.ErrorMessageLimiteGramatura;
+                erro_Rom_Lista.CodigoErro = "1025";
 
                 erroList.Add(erro_Rom_Lista);
                 xml dadosXML = new xml(erroList);
@@ -1142,6 +1145,7 @@ namespace CriandoSoapXML
 
 
                 erro_Rom_Lista.erro_Romaneio = erroRomaneio.ErrorMessageLimiteTipo;
+                erro_Rom_Lista.CodigoErro = "1019";
 
                 erroList.Add(erro_Rom_Lista);
                 xml dadosXML = new xml(erroList);
@@ -1316,6 +1320,7 @@ namespace CriandoSoapXML
 
 
                 erro_Peca_Lista.erro_Peca = erroPeca.ErrorMessageLimitePeso;
+                erro_Peca_Lista.CodigoErro = "1031";
 
                 erroList.Add(erro_Peca_Lista);
                 xml dadosXML = new xml(erroList);
@@ -1327,6 +1332,7 @@ namespace CriandoSoapXML
 
 
                 erro_Peca_Lista.erro_Peca = erroPeca.ErrorMessageLimiteGramatura;
+                erro_Peca_Lista.CodigoErro = "1033";
 
                 erroList.Add(erro_Peca_Lista);
                 xml dadosXML = new xml(erroList);
