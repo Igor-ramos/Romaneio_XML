@@ -25,8 +25,7 @@ namespace CriandoSoapXML
     // Para permitir que esse serviço da web seja chamado a partir do script, usando ASP.NET AJAX, remova os comentários da linha a seguir. 
     // [System.Web.Script.Services.ScriptService]
     public class CriaXML : System.Web.Services.WebService
-    {
-
+    {        
         private string caminhoArquivo = Path.GetDirectoryName(System.AppDomain.CurrentDomain.BaseDirectory);
 
         [WebMethod(Description = "Cadastra um Lote")]
@@ -78,6 +77,14 @@ namespace CriandoSoapXML
             id_cliente = Convert.ToInt32(cmd.ExecuteScalar());
             string idcliente = id_cliente.ToString();
             conection.Close();
+
+
+
+            conection.Open();
+
+            MySqlTransaction Trans = conection.BeginTransaction();
+            cmd = new MySqlCommand("START TRANSACTION;", conection);
+            cmd.Transaction = Trans;
 
             List<Lote> lotes = new List<Lote>();
             try
@@ -174,7 +181,6 @@ namespace CriandoSoapXML
                             cmd.Parameters.AddWithValue("@COD_Verificacao", codigo);
 
                             cmd.CommandType = CommandType.Text;
-                            conection.Open();
                             cmd.ExecuteNonQuery();
 
                             seleciona = "SELECT LAST_INSERT_ID()";
@@ -182,7 +188,6 @@ namespace CriandoSoapXML
 
                             ultimoid = Convert.ToInt32(cme.ExecuteScalar());
 
-                            conection.Close();
                             romaneio = itemlote.SelectNodes("Romaneio");
                             List<Romaneio> romaneios = new List<Romaneio>();
                             try
@@ -296,7 +301,6 @@ namespace CriandoSoapXML
                                             cmd.Parameters.AddWithValue("@DC_Obs", DC_Obs);
 
                                             cmd.CommandType = CommandType.Text;
-                                            conection.Open();
                                             cmd.ExecuteNonQuery();
 
                                             seleciona = "SELECT LAST_INSERT_ID()";
@@ -304,11 +308,10 @@ namespace CriandoSoapXML
 
                                             int ultimoid_R = Convert.ToInt32(cme.ExecuteScalar());
 
-                                            conection.Close();
                                             peca = itemromaneio.SelectNodes("Peca");
                                             List<Peca> pecas = new List<Peca>();
                                             try
-                                            { //colocar try catch nos outros negocio tudo
+                                            { 
                                                 foreach (XmlNode itempeca in peca)
                                                 {
                                                     string NR_Peca = itempeca.SelectSingleNode("NR_Peca").InnerText;
@@ -347,7 +350,6 @@ namespace CriandoSoapXML
                                                         xml dadosXML = new xml(erroList);
                                                         return dadosXML;
                                                     }
-
                                                     t = verifica_Peca(ultimoid, NR_Peca, NR_Peso, NR_Comprimento); //se repetir esses, nao adiciona peça nova.
 
                                                     if (t == null)
@@ -367,25 +369,22 @@ namespace CriandoSoapXML
 
 
                                                             cmd.CommandType = CommandType.Text;
-                                                            conection.Open();
 
                                                             cmd.ExecuteNonQuery();
+                                                            
 
-                                                            conection.Close();
                                                         }
                                                         catch (Exception erro)
                                                         {
+                                                            Trans.Rollback();
+                                                            conection.Close();
                                                             List<Erro> erros = new List<Erro>();
                                                             Erro erro1 = new Erro();
                                                             erro1.tipo = erro.ToString();
                                                             erros.Add(erro1);
                                                             xml erroxml = new xml(erros);
                                                             return erroxml;
-                                                        }
-                                                        finally
-                                                        {
-                                                            conection.Close();
-                                                            conection.Dispose();
+
                                                         }
                                                     }
                                                     else
@@ -394,8 +393,10 @@ namespace CriandoSoapXML
                                                     }
                                                 }
                                             }
-                                            catch
+                                            catch(Exception error)
                                             {
+                                                Trans.Rollback();
+                                                conection.Close();
                                                 Erro xmlInvalidoooo = new Erro();
 
                                                 xmlInvalidoooo.codigo = "1027";
@@ -408,17 +409,14 @@ namespace CriandoSoapXML
                                         }
                                         catch (Exception erro)
                                         {
+                                            Trans.Rollback();
+                                            conection.Close();
                                             List<Erro> erros = new List<Erro>();
                                             Erro erro1 = new Erro();
                                             erro1.tipo = erro.ToString();
                                             erros.Add(erro1);
                                             xml erroxml = new xml(erros);
                                             return erroxml;
-                                        }
-                                        finally
-                                        {
-                                            conection.Close();
-                                            conection.Dispose();
                                         }
                                     }
                                     else
@@ -427,8 +425,10 @@ namespace CriandoSoapXML
                                     }
                                 }
                             }
-                            catch(Exception erro)
+                            catch (Exception erro)
                             {
+                                Trans.Rollback();
+                                conection.Close();
                                 Erro xmlInvalidooo = new Erro();
 
                                 xmlInvalidooo.codigo = "1011";
@@ -437,13 +437,20 @@ namespace CriandoSoapXML
 
                                 xml dadooosXML = new xml(erroList);
                                 return dadooosXML;
+
                             }
-                            
+
                         }
-                        finally
+                        catch (Exception erro)
                         {
+                            Trans.Rollback();
                             conection.Close();
-                            conection.Dispose();
+                            List<Erro> erros = new List<Erro>();
+                            Erro erro1 = new Erro();
+                            erro1.tipo = erro.ToString();
+                            erros.Add(erro1);
+                            xml erroxml = new xml(erros);
+                            return erroxml;
                         }
                     }
                     else
@@ -452,12 +459,14 @@ namespace CriandoSoapXML
                     }
                 }
             }
-            catch 
+            catch(Exception error)
             {
+                Trans.Rollback();
+                conection.Close();
                 Erro xmlInvalidoo = new Erro();
 
-                xmlInvalidoo.codigo = "1027";
-                xmlInvalidoo.tipo = "Peça não identificada!";
+                xmlInvalidoo.codigo = "1001";
+                xmlInvalidoo.tipo = "Lote não identificado!";
                 erroList.Add(xmlInvalidoo);
 
                 xml dadoosXML = new xml(erroList);
@@ -468,8 +477,9 @@ namespace CriandoSoapXML
             sucesso.tipo = "Sucesso ao Enviar o(s) Lote(s) !";
             sucessos.Add(sucesso);
             xml sucessoxml = new xml(sucessos);
+            Trans.Commit();
+            conection.Close();
             return sucessoxml;
-
         }
 
         [WebMethod(Description = "Artigo e Cor")]
@@ -1198,17 +1208,18 @@ namespace CriandoSoapXML
                                                 dr.Close();
                                                 dr.Dispose();
                                                 int conta = 0;
-                                                foreach (var i in cores)
+                                                foreach (var i in cores) //to tentando corrigir isso agr 17/10/18 10:30am
                                                 {
-                                                    if (DC_Artigo != i.artigo)
+                                                    if (DC_Artigo == i.artigo)
                                                         conta++;
-                                                    if (DC_Cor != i.corl)
+                                                    if (DC_Cor == i.corl)
                                                         conta++;
                                                 }
-                                                if (conta > 0)
+                                                if (conta == 0)
                                                 {
                                                     Romaneio erro_Rom_Lista = new Romaneio();
                                                     erro_Rom_Lista.erro_Romaneio = "Campo <DC_Artigo> ou <DC_Cor> inválidos, favor consultar sua tabela de artigos.";
+                                                    erro_Rom_Lista.CodigoErro = "1013, 1015";
 
                                                     erroList.Add(erro_Rom_Lista);
                                                     xml dadossXML = new xml(erroList);
@@ -1221,10 +1232,10 @@ namespace CriandoSoapXML
                                 return null;
                             }
                             else
-                            {                                
+                            {
                                 Romaneio erro_Romaneio_Lista = new Romaneio();
-                                erro_Romaneio_Lista.erro_Romaneio = "Campo <NR_Nota_Fiscal> repetido ou inválido! Máximo de 9 dígitos!s";
-                                erro_Romaneio_Lista.CodigoErro = "1003";
+                                erro_Romaneio_Lista.erro_Romaneio = "Campo <NR_Romaneio> repetido ou inválido! Máximo de 7 dígitos!";
+                                erro_Romaneio_Lista.CodigoErro = "1013";
                                 erro_Romaneio_Lista.dc_artigo = DC_Artigo;
                                 erro_Romaneio_Lista.dc_cor = DC_Cor;
                                 erro_Romaneio_Lista.dc_obs = DC_Obs;
